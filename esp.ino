@@ -1,10 +1,7 @@
 #include <ESP8266WiFi.h>
 
-const char* ssid = "YourHotspotSSID";  // Replace with your hotspot SSID
-const char* password = "YourHotspotPassword";  // Replace with your hotspot password
-
-WiFiServer server(80);  // Create a server that listens on port 80
-
+const char* ssid = "iQOO Z7s 5G";  // Replace with your hotspot SSID
+const char* password = "a1b2c3d4e5f6g7";  // Replace with your hotspot password
 
 int motorLeftPin1 = 12;
 int motorLeftPin2 = 14;
@@ -13,21 +10,18 @@ int motorRightPin1 = 2;
 int motorRightPin2 = 4;
 int enableRightPin = 0;
 
-
 int trigPin = 16;
 int echoPin = 5;
-
 
 #define SOUND_SPEED 0.034
 #define HALF_SPEED 115  // PWM value for approximately half speed (0-255 range)
 
-
 float thresholdDistance = 31.0;
-
 
 long duration;
 float distanceCm;
 
+WiFiServer server(80);  // Create a server that listens on port 80
 
 void setup() {
   pinMode(motorLeftPin1, OUTPUT);
@@ -37,14 +31,13 @@ void setup() {
   pinMode(motorRightPin2, OUTPUT);
   pinMode(enableRightPin, OUTPUT);
 
-
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
-
   Serial.begin(115200);
 
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssid, password);  // Start connecting to the Wi-Fi network
+
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
@@ -63,70 +56,63 @@ void setup() {
   Serial.println("Server started");
 }
 
-
 void loop() {
   distanceCm = getDistance();
-  Serial.print("Distance (cm): ");
-  Serial.println(distanceCm);
+  moveForward();
   if (distanceCm < thresholdDistance) {
     stopMotors();
     delay(1000);
+
     WiFiClient client = server.available();  // Check if a client has connected
-    char turnDir = '\0';  
     if (client) {
       Serial.println("New Client Connected");
+      String receivedData = "";
       while (client.connected()) {
-        if (client.available()) {
+        while (client.available()) {
           char c = client.read();
           Serial.write(c);  // Print the received character to the Serial Monitor
-          turnDir = c;
+          receivedData += c;
+        }
+        if (receivedData.length() > 0) {
+          // Process receivedData to get the region
+          char region = receivedData.charAt(0);
+          rotateToRegion(region);
+          delay(500);
+          stopMotors();
+          delay(1000);
+          distanceCm = getDistance();
+          if (distanceCm >= thresholdDistance) {
+            moveForward();
+          } else {
+            rotateOpp(region);
+            stopMotors();
+            delay(1000);
+            distanceCm = getDistance();
+            if (distanceCm >= thresholdDistance) {
+              moveForward();
+            } else {
+              rotateRight();
+              delay(500);
+              stopMotors();
+              delay(1000);
+              moveForward();
+            }
+          }
+
+          // Send a response back to the client
+          client.print("OK\n");
+          client.stop();
+          Serial.println("Response sent to client");
         }
       }
-      client.stop();  // Close the connection
       Serial.println("Client Disconnected");
-    }
-
-    if(turnDir == '1'){
-      rotateLeft();
-      delay(800);
-    }else if(turnDir == '2'){
-      rotateLeft();
-      delay(500);
-    }else if(turnDir == '3'){
-      rotateLeft();
-      delay(500);
-    }else if(turnDir == '4'){
-      rotateLeft();
-      delay(800);
-    }
-    stopMotors();
-    delay(1000);
-    distanceCm = getDistance();
-    if (distanceCm >= thresholdDistance) {
-      moveForward();
-    } else {
-      if(turnDir == '1' || turnDir == '2'){
-        rotateRight();
-        delay(1000);
-      }else{
-        rotateLeft();
-        delay(1000);
-      }   
-      stopMotors();
-      delay(1000);
-      distanceCm = getDistance();
-      if (distanceCm >= thresholdDistance) {
-        moveForward();
-      }
     }
   } else {
     moveForward();
   }
 
-
   delay(100);
 }
-
 
 void moveForward() {
   analogWrite(enableLeftPin, HALF_SPEED);
@@ -135,20 +121,16 @@ void moveForward() {
   digitalWrite(motorLeftPin2, LOW);
   digitalWrite(motorRightPin1, HIGH);
   digitalWrite(motorRightPin2, LOW);
-  Serial.println("Moving Forward");
 }
-
 
 void stopMotors() {
   analogWrite(enableLeftPin, 0);
   analogWrite(enableRightPin, 0);
-  digitalWrite(motorLeftPin2, LOW);
-  digitalWrite(motorLeftPin1, LOW);
-  digitalWrite(motorRightPin1, LOW);
-  digitalWrite(motorRightPin2, LOW);
-  Serial.println("Motors Stopped");
+  digitalWrite(motorLeftPin1, HIGH);
+  digitalWrite(motorLeftPin2, HIGH);
+  digitalWrite(motorRightPin1, HIGH);
+  digitalWrite(motorRightPin2, HIGH);
 }
-
 
 void rotateLeft() {
   analogWrite(enableLeftPin, HALF_SPEED);
@@ -157,9 +139,7 @@ void rotateLeft() {
   digitalWrite(motorLeftPin2, LOW);
   digitalWrite(motorRightPin1, LOW);
   digitalWrite(motorRightPin2, HIGH);
-  Serial.println("Rotating Left");
 }
-
 
 void rotateRight() {
   analogWrite(enableLeftPin, HALF_SPEED);
@@ -168,9 +148,33 @@ void rotateRight() {
   digitalWrite(motorLeftPin2, HIGH);
   digitalWrite(motorRightPin1, HIGH);
   digitalWrite(motorRightPin2, LOW);
-  Serial.println("Rotating Right");
 }
 
+void rotateToRegion(char r) {
+  if (r == '1') {
+    rotateLeft();
+    delay(800);
+  } else if (r == '2') {
+    rotateLeft();
+    delay(400);
+  } else if (r == '3') {
+    rotateRight();
+    delay(400);
+  } else if (r == '4') {
+    rotateRight();
+    delay(800);
+  }
+}
+
+void rotateOpp(char r) {
+  if (r == '1' || r == '2') {
+    rotateRight();
+    delay(1000);
+  } else {
+    rotateLeft();
+    delay(1000);
+  }
+}
 
 float getDistance() {
   digitalWrite(trigPin, LOW);
@@ -179,9 +183,7 @@ float getDistance() {
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
 
-
   duration = pulseIn(echoPin, HIGH);
-
 
   return duration * SOUND_SPEED / 2;
 }
