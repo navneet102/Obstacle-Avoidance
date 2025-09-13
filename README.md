@@ -5,10 +5,6 @@
 [![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-red)](https://opencv.org/)
 [![Python](https://img.shields.io/badge/Python-3.x-yellow)](https://www.python.org/)
 
-**🏆 Runner-up - RoBoAviate Competition**
-
-An intelligent autonomous robot that navigates through environments while avoiding obstacles using advanced computer vision and machine learning techniques.
-
 ## 🚀 Features
 
 - **Advanced Depth Detection**: Utilizes MiDAS depth estimation library for single-camera depth perception
@@ -53,12 +49,9 @@ Multiple sensor inputs are combined to create a comprehensive understanding of t
 ```
 Obstacle-Avoidance/
 ├── src/
-│   ├── python/          # Python scripts for ML and image processing
-│   ├── arduino/         # Arduino code for hardware control
-│   └── algorithms/      # Core navigation algorithms
-├── models/              # Pre-trained ML models
-├── docs/               # Documentation and setup guides
-└── tests/              # Test scripts and validation
+   ├── python/          # Python scripts for ML and image processing
+   ├── arduino/         # Arduino code for hardware control
+   └── algorithms/      # Core navigation algorithms
 ```
 
 ## 🚀 Getting Started
@@ -78,18 +71,12 @@ git clone https://github.com/navneet102/Obstacle-Avoidance.git
 cd Obstacle-Avoidance
 ```
 
-2. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
+2. Set up Arduino environment and upload the control code to your microcontroller
 
-3. Set up Arduino environment and upload the control code to your microcontroller
-
-4. Configure hardware connections as per the documentation
+3. Configure hardware connections as per the documentation
 
 ## 🎯 Key Achievements
 
-- **🥈 Runner-up** in RoBoAviate Competition
 - **Innovative ML Integration**: Successfully implemented single-camera depth detection using MiDAS
 - **Hardware Optimization**: Reduced sensor requirements while maintaining performance
 - **Real-time Performance**: Achieved efficient obstacle avoidance with minimal processing delay
